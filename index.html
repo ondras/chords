@@ -1,0 +1,20 @@
+<script type="module">
+import { createChord } from "./app/core.js";
+import { GUITAR } from "./app/instruments.js";
+import * as localizer from "./app/localizer.js";
+import { createInstances } from "./app/generator.js";
+import * as render from "./app/render.js";
+
+
+let cs = localizer.create("cs");
+
+
+let D = createChord("major", cs.stringToTone("D"));
+console.log(D.map(cs.toneToString));
+//let F = createChord("major", fromCS("F"));
+let instances = createInstances(GUITAR, D, 0);
+instances.forEach(i => {
+	console.log(render.ascii(i, cs));
+	document.body.appendChild(render.svg(i, cs));
+});
+</script>
