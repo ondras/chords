@@ -1,16 +1,23 @@
+import { assert } from "./util.js";
+
 export type Tone = number;
 export type Finger = number;
-export type Chord = Tone[];
 export type Instrument = Tone[];
-export const SEMITONES = 12;
+export const TONES = 12;
+
+export interface Chord {
+	type: string;
+	tones: Tone[];
+	base: Tone;
+}
 
 export interface Instance {
 	instrument: Instrument;
-	offset: number;
-	fingers: Finger[]
+	fingers: Finger[];
+	chord: Chord;
 }
 
-const CHORDS: {[name:string]: Chord} = {
+const CHORDS: {[name:string]: Tone[]} = {
 	"major": [0, 4, 7],
 	"maj6": [0, 4, 7, 9],
 	"dom7": [0, 4, 7, 10],
@@ -28,12 +35,12 @@ const CHORDS: {[name:string]: Chord} = {
 };
 
 
-export function assert(assertion: any, label: string) {
-	if (!assertion) { throw new Error(label); }
-}
+export function createChord(type: string, base: Tone) {
+	assert(type in CHORDS, `Chord "${type}" not found`);
 
-export function createChord(chord: string, base: Tone) {
-	assert(chord in CHORDS, `Chord "${chord}" not found`);
-	return CHORDS[chord].map(tone => (tone + base) % SEMITONES);
+	return {
+		type,
+		base,
+		tones: CHORDS[type].map(tone => (tone + base) % TONES)
+	}
 }
-

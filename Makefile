@@ -1,4 +1,7 @@
 TSC := $(shell npm bin)/tsc
 
-app.js: src/*.ts
+all: src/*.ts
 	$(TSC)
+
+watch: all
+	while inotifywait -e MODIFY -r src; do make $^ ; done

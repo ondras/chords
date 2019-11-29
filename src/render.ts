@@ -4,10 +4,17 @@ import { Instance } from "./core.js";
 import * as svgRender from "./render-svg.js";
 import * as asciiRender from "./render-ascii.js";
 
+function getOffset(instance: Instance) {
+	let suitable = instance.fingers.filter(f => f > 0);
+	return Math.min(...suitable)-1;
+}
+
 export function ascii(instance: Instance, localizer: Localizer) {
-	return asciiRender.render(instance, localizer);
+	let offset = getOffset(instance);
+	return asciiRender.render(instance, localizer, offset);
 }
 
 export function svg(instance: Instance, localizer: Localizer) {
-	return svgRender.render(instance, localizer);
+	let offset = getOffset(instance);
+	return svgRender.render(instance, localizer, offset);
 }

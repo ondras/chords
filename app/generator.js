@@ -1,4 +1,4 @@
-import { SEMITONES } from "./core.js";
+import { TONES } from "./core.js";
 const MAX_FRET = 3;
 function sum(arr) {
     return arr.reduce((a, b) => a + b, 0);
@@ -9,23 +9,27 @@ function COMPARE(f1, f2) {
     let m2 = max(f2);
     return (m1 == m2 ? sum(f1) - sum(f2) : m1 - m2);
 }
-function fingersOnString(string, chord, ctx) {
+function fingersOnString(string, chord, startFret, ctx) {
     let result = [];
-    for (let i = 0; i <= MAX_FRET; i++) {
-        let t = (string + i) % SEMITONES;
-        let index = chord.indexOf(t);
+    let frets = [0];
+    for (let i = 0; i < MAX_FRET; i++) {
+        frets.push(startFret + i);
+    }
+    frets.forEach(fret => {
+        let t = (string + fret) % TONES;
+        let index = chord.tones.indexOf(t);
         if (index == -1) {
-            continue;
+            return;
         }
         if (ctx.rootFound) {
-            result.push(i);
+            result.push(fret);
         }
         else if (index == 0) {
             ctx.rootFound = true;
-            result.push(i);
+            result.push(fret);
         }
-    }
-    return (result.length > 0 ? result : [-1]);
+    });
+    return result;
 }
 function createFingerCombinations(fingers) {
     if (fingers.length == 0) {
@@ -33,16 +37,18 @@ function createFingerCombinations(fingers) {
     }
     let current = fingers[0];
     let remaining = fingers.slice(1);
+    if (current.length == 0) {
+        current = [-1];
+    }
     return current.flatMap(finger => {
         return createFingerCombinations(remaining).map(remaining => [finger].concat(remaining));
     });
 }
-export function createInstances(instrument, chord, offset) {
-    let offsetStrings = instrument.map(string => (string + offset) % SEMITONES);
+export function createInstances(instrument, chord, startFret = 1) {
     let ctx = { rootFound: false };
-    let fingers = offsetStrings.map(string => fingersOnString(string, chord, ctx));
+    let fingers = instrument.map(string => fingersOnString(string, chord, startFret, ctx));
     function createInstance(fingers) {
-        return { fingers, instrument, offset };
+        return { fingers, instrument, chord };
     }
     return createFingerCombinations(fingers).sort(COMPARE).map(createInstance);
 }

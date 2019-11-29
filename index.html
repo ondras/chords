@@ -1,4 +1,6 @@
 <script type="module">
+import "./app/sanity-check.js";
+
 import { createChord } from "./app/core.js";
 import { GUITAR } from "./app/instruments.js";
 import * as localizer from "./app/localizer.js";
@@ -10,11 +12,33 @@ let cs = localizer.create("cs");
 
 
 let D = createChord("major", cs.stringToTone("D"));
-console.log(D.map(cs.toneToString));
+console.log(D.tones.map(cs.toneToString));
 //let F = createChord("major", fromCS("F"));
-let instances = createInstances(GUITAR, D, 0);
+let instances = createInstances(GUITAR, D, 5);
+
 instances.forEach(i => {
+	console.log(i);
 	console.log(render.ascii(i, cs));
 	document.body.appendChild(render.svg(i, cs));
 });
+
+
+let H = createChord("m7b5", cs.stringToTone("H"));
+instances = createInstances(GUITAR, H, 1);
+
+instances.forEach(i => {
+	console.log(i);
+	console.log(render.ascii(i, cs));
+	document.body.appendChild(render.svg(i, cs));
+});
+
+let D9 = createChord("dom9", cs.stringToTone("D"));
+instances = createInstances(GUITAR, D9, 3);
+
+instances.forEach(i => {
+	console.log(i);
+	console.log(render.ascii(i, cs));
+	document.body.appendChild(render.svg(i, cs));
+});
+
 </script>

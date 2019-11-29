@@ -1,4 +1,5 @@
-export const SEMITONES = 12;
+import { assert } from "./util.js";
+export const TONES = 12;
 const CHORDS = {
     "major": [0, 4, 7],
     "maj6": [0, 4, 7, 9],
@@ -14,12 +15,11 @@ const CHORDS = {
     "dim7": [0, 3, 6, 9],
     "m7b5": [0, 3, 6, 10]
 };
-export function assert(assertion, label) {
-    if (!assertion) {
-        throw new Error(label);
-    }
-}
-export function createChord(chord, base) {
-    assert(chord in CHORDS, `Chord "${chord}" not found`);
-    return CHORDS[chord].map(tone => (tone + base) % SEMITONES);
+export function createChord(type, base) {
+    assert(type in CHORDS, `Chord "${type}" not found`);
+    return {
+        type,
+        base,
+        tones: CHORDS[type].map(tone => (tone + base) % TONES)
+    };
 }

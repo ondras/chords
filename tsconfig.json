@@ -3,6 +3,8 @@
 		"strict": true,
 		"outDir": "app",
 		"target": "es2019",
-		"noUnusedLocals": true
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"noEmitOnError": true
 	}
 }
