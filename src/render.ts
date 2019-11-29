@@ -6,6 +6,7 @@ import * as asciiRender from "./render-ascii.js";
 
 function getOffset(instance: Instance) {
 	let suitable = instance.fingers.filter(f => f > 0);
+	if (Math.max(...suitable) <= 3) { return 0; }
 	return Math.min(...suitable)-1;
 }
 

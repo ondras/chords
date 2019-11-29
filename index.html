@@ -1,3 +1,6 @@
+<style>
+	body { font-family: serif; }
+</style>
 <script type="module">
 import "./app/sanity-check.js";
 
@@ -10,11 +13,22 @@ import * as render from "./app/render.js";
 
 let cs = localizer.create("cs");
 
+["C", "D", "E", "F", "G", "A", "B", "H"].forEach(str => {
+	let chord = createChord("major", cs.stringToTone(str));
+	let instances = createInstances(GUITAR, chord, 1);
+
+	instances.forEach(i => {
+		console.log(i);
+		console.log(render.ascii(i, cs));
+		document.body.appendChild(render.svg(i, cs));
+	});
+});
+
 
 let D = createChord("major", cs.stringToTone("D"));
 console.log(D.tones.map(cs.toneToString));
 //let F = createChord("major", fromCS("F"));
-let instances = createInstances(GUITAR, D, 5);
+let instances = createInstances(GUITAR, D, 1);
 
 instances.forEach(i => {
 	console.log(i);
