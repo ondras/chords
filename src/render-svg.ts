@@ -28,6 +28,7 @@ function name(instance: Instance, localizer: Localizer) {
 	return name;
 }
 
+
 function renderStrings(instance: Instance, fretCount: number) {
 	const left = PADDING;
 	const top = PADDING + FONT_LARGE;
@@ -90,6 +91,7 @@ function renderFingers(fingers: number[]) {
 	}).forEach(n => n && frag.appendChild(n));
 
 	return frag;
+	// ○✕
 }
 
 

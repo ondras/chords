@@ -70,6 +70,7 @@ function renderFingers(fingers) {
         return node("circle", { cx, cy, r });
     }).forEach(n => n && frag.appendChild(n));
     return frag;
+    // ○✕
 }
 export function render(instance, localizer, offset) {
     const fingers = offsetFingers(instance.fingers, offset);
