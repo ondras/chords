@@ -10,6 +10,7 @@ const CHORDS = {
     "maj7": "maj⁷",
     "aug": "+",
     "aug7": "+⁷",
+    "dom9": "⁹",
     "minor": "mi",
     "min6": "mi⁶",
     "min7": "mi⁷",

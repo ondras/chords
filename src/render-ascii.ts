@@ -4,7 +4,6 @@ import { toRoman, offsetFingers, fretCount } from "./util.js";
 
 
 export function render(instance: Instance, localizer: Localizer, offset: number) {
-	const strings = instance.instrument;
 	const fingers = offsetFingers(instance.fingers, offset)
 
 	let rows = [];
@@ -17,17 +16,21 @@ export function render(instance: Instance, localizer: Localizer, offset: number)
 		rows.push("");
 	}
 
-	rows.push(strings.map(localizer.toneToString).join(""));
-	rows.push(fingers.map(f => f > -1 ? f : "X").join(""));
-	rows.push("");
+	rows.push(fingers.map(f => {
+		switch (f) {
+			case -1: return "x";
+			case 0: return "o";
+			default: return " ";
+		}
+	}).join(""));
 
-	rows.push(fingers.map(_ => "-").join(""));
+	rows.push(fingers.map(_ => "=").join(""));
+
 	let count = fretCount(fingers);
 	for (let fret = 1; fret <= count; fret++) {
 		let row = fingers.map(f => (f == fret ? "o" : "|"));
 		rows.push(row.join(""));
 	}
-	rows.push(fingers.map(_ => "-").join(""));
 
 	return rows.join("\n");
 }

@@ -1,11 +1,14 @@
 import { toRoman, offsetFingers, fretCount } from "./util.js";
 const SVGNS = "http://www.w3.org/2000/svg";
+const PADDING_BASE = 20;
 const FRET = 32;
 const STRING = 16;
-const PADDING = 20;
 const FINGER = 7;
 const FONT_LARGE = 16;
 const FONT_SMALL = 10;
+const SYMBOL = 6;
+const PADDING_LR = PADDING_BASE;
+const PADDING_TOP = PADDING_BASE + FONT_LARGE + 2 * SYMBOL;
 function node(name, attributes = {}) {
     let node = document.createElementNS(SVGNS, name);
     for (let n in attributes) {
@@ -13,16 +16,25 @@ function node(name, attributes = {}) {
     }
     return node;
 }
-function name(instance, localizer) {
-    let x = String(PADDING + (instance.instrument.length - 1) * STRING / 2);
-    let y = String(PADDING + FONT_LARGE / 2);
+function renderEmptyString(x, y) {
+    const r = SYMBOL / 2;
+    return node("circle", { cx: String(x), cy: String(y), r: String(r), fill: "none", stroke: "#000", "stroke-width": "1.5" });
+}
+function renderMuteString(x, y) {
+    const L = SYMBOL;
+    const d = `M ${x} ${y} m -${L / 2} -${L / 2} l ${L} ${L} m ${-L} 0 l ${L} ${-L}`;
+    return node("path", { d, stroke: "#000", "stroke-width": "1.5", "stroke-linecap": "round" });
+}
+function renderName(instance, localizer) {
+    let x = String(PADDING_LR + (instance.instrument.length - 1) * STRING / 2);
+    let y = String(PADDING_BASE + FONT_LARGE / 2);
     let name = node("text", { x, y, "text-anchor": "middle", "font-size": String(FONT_LARGE) });
     name.textContent = localizer.chord(instance.chord);
     return name;
 }
 function renderStrings(instance, fretCount) {
-    const left = PADDING;
-    const top = PADDING + FONT_LARGE;
+    const left = PADDING_LR;
+    const top = PADDING_TOP;
     const length = fretCount * FRET;
     const stroke = "#000";
     let strings = instance.instrument.map((_, i) => {
@@ -33,8 +45,8 @@ function renderStrings(instance, fretCount) {
 }
 function renderFrets(instance, fretCount, offset) {
     let frag = document.createDocumentFragment();
-    const left = PADDING;
-    const top = PADDING + FONT_LARGE;
+    const left = PADDING_LR;
+    const top = PADDING_TOP;
     const length = (instance.instrument.length - 1) * STRING;
     const stroke = "#000";
     let frets = [];
@@ -59,14 +71,20 @@ function renderFrets(instance, fretCount, offset) {
 function renderFingers(fingers) {
     let frag = document.createDocumentFragment();
     const r = String(FINGER);
-    const left = PADDING;
-    const top = PADDING + FONT_LARGE;
+    const left = PADDING_LR;
+    const top = PADDING_TOP;
     fingers.map((finger, i) => {
-        if (finger < 1) {
+        const x = left + i * STRING;
+        if (finger == -1) {
+            return renderMuteString(x, top - SYMBOL * 1.5);
             return null;
         }
-        let cx = String(left + i * STRING);
-        let cy = String(top + (finger - 0.5) * FRET);
+        else if (finger == 0) {
+            return renderEmptyString(x, top - SYMBOL * 1.5);
+            return null;
+        }
+        const cx = String(x);
+        const cy = String(top + (finger - 0.5) * FRET);
         return node("circle", { cx, cy, r });
     }).forEach(n => n && frag.appendChild(n));
     return frag;
@@ -75,11 +93,11 @@ function renderFingers(fingers) {
 export function render(instance, localizer, offset) {
     const fingers = offsetFingers(instance.fingers, offset);
     const fc = fretCount(fingers);
-    const width = (instance.instrument.length - 1) * STRING + 2 * PADDING;
-    const height = fc * FRET + 2 * PADDING + FONT_LARGE;
+    const width = (instance.instrument.length - 1) * STRING + 2 * PADDING_LR;
+    const height = fc * FRET + PADDING_TOP + PADDING_BASE;
     const viewBox = `0 0 ${width} ${height}`;
     let svg = node("svg", { viewBox, width: String(width), height: String(height) });
-    svg.appendChild(name(instance, localizer));
+    svg.appendChild(renderName(instance, localizer));
     svg.appendChild(renderStrings(instance, fc));
     svg.appendChild(renderFrets(instance, fc, offset));
     svg.appendChild(renderFingers(fingers));
