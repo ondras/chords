@@ -42,14 +42,15 @@ export function cartesianProduct(sets) {
     let current = sets[0];
     let remaining = sets.slice(1);
     if (remaining.length > 0) {
-        current.forEach(finger => {
+        current.forEach(value => {
             cartesianProduct(remaining)
-                .map(remaining => [finger].concat(remaining))
+                .map(remaining => [value].concat(remaining))
                 .forEach(combination => result.push(combination));
         });
     }
     else {
-        current.forEach(finger => result.push([finger]));
+        current.forEach(value => result.push([value]));
     }
     return result;
 }
+export function stripTags(str) { return str.replace(/<.*?>/g, ""); }

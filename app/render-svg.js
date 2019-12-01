@@ -9,6 +9,11 @@ const FONT_SMALL = 10;
 const SYMBOL = 6;
 const PADDING_LR = PADDING_BASE;
 const PADDING_TOP = PADDING_BASE + FONT_LARGE + 2 * SYMBOL;
+function fixSup(sup) {
+    let tspan = node("tspan", { "dy": String(FONT_LARGE * -0.5), "font-size": String(FONT_LARGE * 0.7) });
+    tspan.textContent = sup.textContent;
+    sup.parentNode && sup.parentNode.replaceChild(tspan, sup);
+}
 function node(name, attributes = {}) {
     let node = document.createElementNS(SVGNS, name);
     for (let n in attributes) {
@@ -29,7 +34,8 @@ function renderName(instance, localizer) {
     let x = String(PADDING_LR + (instance.instrument.length - 1) * STRING / 2);
     let y = String(PADDING_BASE + FONT_LARGE / 2);
     let name = node("text", { x, y, "text-anchor": "middle", "font-size": String(FONT_LARGE) });
-    name.textContent = localizer.chord(instance.chord);
+    name.innerHTML = localizer.chordToString(instance.chord);
+    Array.from(name.querySelectorAll("sup")).forEach(fixSup);
     return name;
 }
 function renderStrings(instance, fretCount) {
@@ -61,10 +67,22 @@ function renderFrets(instance, fretCount, offset) {
     }
     else {
         let x = String(left - 3);
-        let y = String(top);
+        let y = String(top + FRET / 2);
         let text = node("text", { x, y, "text-anchor": "end", "dominant-baseline": "middle", "font-size": String(FONT_SMALL) });
-        text.textContent = `${toRoman(offset).toUpperCase()}.`;
+        text.textContent = `${toRoman(offset + 1).toUpperCase()}.`;
         frag.appendChild(text);
+    }
+    return frag;
+}
+function renderBarre(instance, offset) {
+    let frag = document.createDocumentFragment();
+    const barre = instance.barre;
+    if (barre) {
+        let x = PADDING_LR + barre.from * STRING;
+        let y = PADDING_TOP + (barre.fret - offset - 0.5) * FRET;
+        let length = (instance.fingers.length - barre.from - 1) * STRING;
+        let d = `M ${x} ${y} h ${length}`;
+        frag.appendChild(node("path", { d, stroke: "#000", "stroke-width": "3", "shape-rendering": "crispEdges", "stroke-linecap": "butt" }));
     }
     return frag;
 }
@@ -88,7 +106,6 @@ function renderFingers(fingers) {
         return node("circle", { cx, cy, r });
     }).forEach(n => n && frag.appendChild(n));
     return frag;
-    // ○✕
 }
 export function render(instance, localizer, offset) {
     const fingers = offsetFingers(instance.fingers, offset);
@@ -100,6 +117,7 @@ export function render(instance, localizer, offset) {
     svg.appendChild(renderName(instance, localizer));
     svg.appendChild(renderStrings(instance, fc));
     svg.appendChild(renderFrets(instance, fc, offset));
+    svg.appendChild(renderBarre(instance, offset));
     svg.appendChild(renderFingers(fingers));
     return svg;
 }

@@ -49,14 +49,16 @@ export function cartesianProduct<T>(sets: Set<T>[]): T[][] {
 	let remaining = sets.slice(1);
 
 	if (remaining.length > 0) {
-		current.forEach(finger => {
+		current.forEach(value => {
 			cartesianProduct<T>(remaining)
-				.map(remaining => [finger].concat(remaining))
+				.map(remaining => [value].concat(remaining))
 				.forEach(combination => result.push(combination))
 		});
 	} else {
-		current.forEach(finger => result.push([finger]));
+		current.forEach(value => result.push([value]));
 	}
 
 	return result;
 }
+
+export function stripTags(str: string) { return str.replace(/<.*?>/g, ""); }

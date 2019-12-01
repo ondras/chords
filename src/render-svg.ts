@@ -14,6 +14,12 @@ const SYMBOL = 6;
 const PADDING_LR = PADDING_BASE;
 const PADDING_TOP = PADDING_BASE + FONT_LARGE + 2*SYMBOL;
 
+function fixSup(sup: HTMLElement) {
+	let tspan = node("tspan", {"dy": String(FONT_LARGE * -0.5), "font-size": String(FONT_LARGE * 0.7)});
+	tspan.textContent = sup.textContent;
+	sup.parentNode && sup.parentNode.replaceChild(tspan, sup);
+}
+
 type Attributes = {[key:string]:string};
 function node(name: string, attributes: Attributes = {}) {
 	let node = document.createElementNS(SVGNS, name);
@@ -32,13 +38,14 @@ function renderMuteString(x: number, y: number) {
 	return node("path", {d, stroke:"#000", "stroke-width":"1.5", "stroke-linecap":"round"});
 }
 
-
 function renderName(instance: Instance, localizer: Localizer) {
 	let x = String(PADDING_LR + (instance.instrument.length-1)*STRING/2);
 	let y = String(PADDING_BASE + FONT_LARGE/2);
 
 	let name = node("text", {x, y, "text-anchor": "middle", "font-size": String(FONT_LARGE)});
-	name.textContent = localizer.chord(instance.chord);
+	name.innerHTML = localizer.chordToString(instance.chord);
+
+	Array.from<HTMLElement>(name.querySelectorAll("sup")).forEach(fixSup);
 
 	return name;
 }
@@ -81,10 +88,25 @@ function renderFrets(instance: Instance, fretCount: number, offset: number) {
 		frag.appendChild(node("path", {d, stroke, "stroke-width":"6", "shape-rendering":"crispEdges", "stroke-linecap":"round"}));
 	} else {
 		let x = String(left - 3);
-		let y = String(top);
+		let y = String(top + FRET/2);
 		let text = node("text", {x, y, "text-anchor": "end", "dominant-baseline": "middle", "font-size": String(FONT_SMALL)});
-		text.textContent = `${toRoman(offset).toUpperCase()}.`;
+		text.textContent = `${toRoman(offset+1).toUpperCase()}.`;
 		frag.appendChild(text);
+	}
+
+	return frag;
+}
+
+function renderBarre(instance: Instance, offset: number) {
+	let frag = document.createDocumentFragment();
+	const barre = instance.barre;
+
+	if (barre) {
+		let x = PADDING_LR + barre.from*STRING;
+		let y = PADDING_TOP + (barre.fret-offset-0.5) * FRET;
+		let length = (instance.fingers.length - barre.from - 1) * STRING;
+		let d = `M ${x} ${y} h ${length}`;
+		frag.appendChild(node("path", {d, stroke:"#000", "stroke-width":"3", "shape-rendering":"crispEdges", "stroke-linecap":"butt"}));
 	}
 
 	return frag;
@@ -113,7 +135,6 @@ function renderFingers(fingers: number[]) {
 	}).forEach(n => n && frag.appendChild(n));
 
 	return frag;
-	// ○✕
 }
 
 
@@ -130,6 +151,7 @@ export function render(instance: Instance, localizer: Localizer, offset: number)
 	svg.appendChild(renderName(instance, localizer));
 	svg.appendChild(renderStrings(instance, fc));
 	svg.appendChild(renderFrets(instance, fc, offset));
+	svg.appendChild(renderBarre(instance, offset));
 	svg.appendChild(renderFingers(fingers));
 
 	return svg;

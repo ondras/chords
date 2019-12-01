@@ -13,8 +13,8 @@ import * as render from "./app/render.js";
 
 let cs = localizer.create("cs");
 
-["C", "D", "E", "F", "G", "A", "B", "H"].forEach(str => {
-	let chord = createChord("major", cs.stringToTone(str));
+["C", "D", "E", "F", "G", "A", "B", "H", "H7", "D9", "Hmi7/5-", "Fmaj7"].forEach(str => {
+	let chord = cs.stringToChord(str);
 	createInstances(GUITAR, chord, 1).forEach(i => {
 		console.log(render.ascii(i, cs));
 		document.body.appendChild(render.svg(i, cs));
@@ -22,11 +22,6 @@ let cs = localizer.create("cs");
 });
 
 
-let H7 = createChord("dom7", cs.stringToTone("H"));
-createInstances(GUITAR, H7, 1).forEach(i => {
-	console.log(render.ascii(i, cs));
-	document.body.appendChild(render.svg(i, cs));
-});
 
 let D9 = createChord("dom9", cs.stringToTone("D"));
 createInstances(GUITAR, D9, 4).forEach(i => {
@@ -35,16 +30,5 @@ createInstances(GUITAR, D9, 4).forEach(i => {
 });
 
 
-let H = createChord("m7b5", cs.stringToTone("H"));
-createInstances(GUITAR, H, 1).forEach(i => {
-	console.log(render.ascii(i, cs));
-	document.body.appendChild(render.svg(i, cs));
-});
-
-let fmaj = createChord("maj7", cs.stringToTone("F"));
-createInstances(GUITAR, fmaj, 1).forEach(i => {
-	console.log(render.ascii(i, cs));
-	document.body.appendChild(render.svg(i, cs));
-});
 
 </script>

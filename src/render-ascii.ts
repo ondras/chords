@@ -1,19 +1,19 @@
 import { Localizer } from "./localizer.js";
 import { Instance } from "./core.js";
-import { toRoman, offsetFingers, fretCount } from "./util.js";
+import { toRoman, offsetFingers, fretCount, stripTags } from "./util.js";
 
 
 export function render(instance: Instance, localizer: Localizer, offset: number) {
-	const fingers = offsetFingers(instance.fingers, offset)
+	const fingers = offsetFingers(instance.fingers, offset);
 
 	let rows = [];
 
-	rows.push(localizer.chord(instance.chord));
+	let name = stripTags(localizer.chordToString(instance.chord));
+	rows.push(name);
 	rows.push("");
 
 	if (offset > 0) {
-		rows.push(`${toRoman(offset).toUpperCase()}.`);
-		rows.push("");
+		rows.push(`${toRoman(offset+1).toUpperCase()}.`);
 	}
 
 	rows.push(fingers.map(f => {
@@ -24,11 +24,15 @@ export function render(instance: Instance, localizer: Localizer, offset: number)
 		}
 	}).join(""));
 
-	rows.push(fingers.map(_ => "=").join(""));
+	rows.push(fingers.map(_ => offset ? "-" : "=").join(""));
 
 	let count = fretCount(fingers);
 	for (let fret = 1; fret <= count; fret++) {
-		let row = fingers.map(f => (f == fret ? "o" : "|"));
+		let row = fingers.map((f, i) => {
+			if (f == fret) { return "o"; }
+			if (instance.barre && instance.barre.fret-offset == fret && instance.barre.from <= i) { return "-"; }
+			return "|";
+		});
 		rows.push(row.join(""));
 	}
 
