@@ -41,3 +41,22 @@ export function offsetFingers(fingers: number[], offset: number) {
 export function fretCount(fingers: number[]) {
 	return Math.max(MIN_FRETS, ...fingers);
 }
+
+export function cartesianProduct<T>(sets: Set<T>[]): T[][] {
+	let result: T[][] = [];
+
+	let current = sets[0];
+	let remaining = sets.slice(1);
+
+	if (remaining.length > 0) {
+		current.forEach(finger => {
+			cartesianProduct<T>(remaining)
+				.map(remaining => [finger].concat(remaining))
+				.forEach(combination => result.push(combination))
+		});
+	} else {
+		current.forEach(finger => result.push([finger]));
+	}
+
+	return result;
+}

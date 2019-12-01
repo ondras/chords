@@ -11,10 +11,16 @@ export interface Chord {
 	base: Tone;
 }
 
+export interface Barre {
+	fret: Finger;
+	from: number;
+}
+
 export interface Instance {
 	instrument: Instrument;
 	fingers: Finger[];
 	chord: Chord;
+	barre: Barre | null;
 }
 
 const CHORDS: {[name:string]: Tone[]} = {
@@ -24,7 +30,7 @@ const CHORDS: {[name:string]: Tone[]} = {
 	"maj7": [0, 4, 7, 11],
 	"aug": [0, 4, 8],
 	"aug7": [0, 4, 8, 10],
-	"dom9": [0, 4, 8, 10, 2],
+	"dom9": [0, 4, /*8,*/ 10, 2],
 
 	"minor": [0, 3, 7],
 	"min6": [0, 3, 7, 9],

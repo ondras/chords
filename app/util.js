@@ -37,3 +37,19 @@ export function offsetFingers(fingers, offset) {
 export function fretCount(fingers) {
     return Math.max(MIN_FRETS, ...fingers);
 }
+export function cartesianProduct(sets) {
+    let result = [];
+    let current = sets[0];
+    let remaining = sets.slice(1);
+    if (remaining.length > 0) {
+        current.forEach(finger => {
+            cartesianProduct(remaining)
+                .map(remaining => [finger].concat(remaining))
+                .forEach(combination => result.push(combination));
+        });
+    }
+    else {
+        current.forEach(finger => result.push([finger]));
+    }
+    return result;
+}

@@ -1,4 +1,5 @@
-import { Instrument, Chord, Tone, Finger, Instance, TONES } from "./core.js";
+import { Instrument, Chord, Tone, Finger, Instance, Barre, TONES } from "./core.js";
+import { cartesianProduct } from "./util.js";
 
 const MAX_FRET = 3;
 const AVAILABLE_FINGERS = 4;
@@ -7,44 +8,59 @@ function sum(arr: number[]) { return arr.reduce((a, b) => a+b, 0); }
 function min(arr: number[]) { return Math.min(...arr); }
 function max(arr: number[]) { return Math.max(...arr); }
 
-function canBeHeld(instance: Instance) {
-	const fingers = instance.fingers;
+function fingerCount(instance: Instance) {
+	if (instance.barre) {
+		const barre = instance.barre;
+		return 1 + instance.fingers.filter(f => f > barre.fret).length;
+	} else {
+		return instance.fingers.filter(f => f > 0).length;
+	}
+}
 
-	let realFingers = fingers.filter(f => f > 0); // true fingers used
-	let fingerCount = realFingers.length;
+function canBePlayed(instance: Instance) {
+	if (fingerCount(instance) > AVAILABLE_FINGERS) { return false; }
 
-	let minFret = min(realFingers); // lowest used fret
-	let minCount = realFingers.filter(f => f == minFret).length;
+	const barre = instance.barre;
+	if (!barre) { return true; }
 
-	// barre: when there are not enough fingers but more than one hold the first fret
-	let isBarre = (minCount > 1 && fingerCount > AVAILABLE_FINGERS);
-
-	if (isBarre) {
-		let barreLastString = -1;
-		fingers.forEach((f, i) => { // the lowest string participating in a barre
-			if (f == minFret && barreLastString == -1) { barreLastString = i; }
-		});
-
-		for (let s=barreLastString; s<fingers.length; s++) {
-			if (fingers[s] < 1) { return false; } // barre, but empty or none requested -> bail out
-		}
+	for (let s=barre.from; s<instance.fingers.length; s++) {
+		if (instance.fingers[s] < 1) { return false; } // inside barret, but empty or none requested -> bail out
 	}
 
 	return true;
 }
 
+function computeBarre(fingers: Finger[]): Barre | null {
+	let realFingers = fingers.filter(f => f > 0); // true fingers used
+	let fingerCount = realFingers.length;
+	if (fingerCount <= AVAILABLE_FINGERS) { return null; } // no need
 
-function COMPARE(f1: Finger[], f2: Finger[]) {
-	let m1 = max(f1);
-	let m2 = max(f2);
-	return (m1 == m2 ? sum(f1) - sum(f2) : m1 - m2);
+	let fret = min(realFingers); // lowest used fret
+	let minCount = realFingers.filter(f => f == fret).length;
+
+	if (minCount == 1) { return null; } // only one tone at the lowest fret
+
+	// count barre props
+	let from = -1;
+	fingers.forEach((f, i) => { // the lowest string participating in a barre
+		if (f == fret && from == -1) { from = i; }
+	});
+
+	return { fret, from };
+}
+
+
+function COMPARE(a: Instance, b: Instance) {
+	let m1 = max(a.fingers);
+	let m2 = max(b.fingers);
+	return (m1 == m2 ? sum(a.fingers) - sum(b.fingers) : m1 - m2);
 }
 
 interface Context {
 	rootFound: boolean;
 }
 function fingersOnString(string: Tone, chord: Chord, startFret: number, ctx:Context) {
-	let result: number[] = [];
+	let result = new Set<Finger>();
 	let frets = [0];
 	for (let i=0; i<MAX_FRET; i++) { frets.push(startFret + i); }
 
@@ -54,26 +70,16 @@ function fingersOnString(string: Tone, chord: Chord, startFret: number, ctx:Cont
 		if (index == -1) { return; }
 
 		if (ctx.rootFound) {
-			result.push(fret);
+			result.add(fret);
 		} else if (index == 0) {
 			ctx.rootFound = true;
-			result.push(fret);
+			result.add(fret);
 		}
 	});
 
+	if (result.size == 0) { result.add(-1); }
+
 	return result;
-}
-
-function createFingerCombinations(fingers: Finger[][]): Finger[][] {
-	if (fingers.length == 0) { return [[]]; }
-
-	let current = fingers[0];
-	let remaining = fingers.slice(1);
-	if (current.length == 0) { current = [-1]; }
-
-	return current.flatMap(finger => {
-		 return createFingerCombinations(remaining).map(remaining => [finger].concat(remaining));
-	});
 }
 
 function hasAllTones(instance: Instance) {
@@ -86,17 +92,53 @@ function hasAllTones(instance: Instance) {
 	return (tones.size == 0);
 }
 
+function expandRedundantTones(instance: Instance): Instance | Instance[] {
+	if (fingerCount(instance) <= AVAILABLE_FINGERS) { return instance; }
+
+	let toneToStrings = new Map<Tone, number[]>();
+
+	instance.fingers.forEach((f, i) => {
+		if (f < 1) { return; }
+		let tone = (f + instance.instrument[i]) % TONES;
+		let strings = toneToStrings.get(tone) || [];
+		strings.push(i);
+		toneToStrings.set(tone, strings);
+	});
+
+	let results: Instance[] = [];
+
+	toneToStrings.forEach(strings => {
+		if (strings.length < 2) { return; }
+		strings.forEach(string => {
+			let altFingers = instance.fingers.slice();
+			altFingers[string] = -1;
+
+			let alternative: Instance = {
+				fingers: altFingers,
+				instrument: instance.instrument,
+				chord: instance.chord,
+				barre: instance.barre
+			}
+			results.push(alternative);
+		});
+	});
+
+	return results;
+}
+
 export function createInstances(instrument: Instrument, chord: Chord, startFret = 1): Instance[] {
 	let ctx = {rootFound:false};
 	let fingers = instrument.map(string => fingersOnString(string, chord, startFret, ctx));
 
 	function createInstance(fingers: Finger[]) {
-		return {fingers, instrument, chord};
+		let barre = computeBarre(fingers);
+		return {fingers, instrument, chord, barre};
 	}
 
-	return createFingerCombinations(fingers)
-		.sort(COMPARE)
+	return cartesianProduct(fingers)
 		.map(createInstance)
 		.filter(hasAllTones)
-		.filter(canBeHeld);
+		.flatMap(expandRedundantTones)
+		.filter(canBePlayed)
+		.sort(COMPARE);
 }
