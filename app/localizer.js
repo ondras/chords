@@ -1,9 +1,8 @@
-import { createChord } from "./core.js";
+import { createChord, TONES } from "./core.js";
 import { assert, stripTags } from "./util.js";
-const NAMES = {
-    "cs": ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "B", "H"],
-    "en": ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "Bb", "B"]
-};
+const BASES = {};
+BASES["english"] = { "0": "C", "2": "D", "4": "E", "5": "F", "7": "G", "9": "A", "10": "B♭", "11": "B" };
+BASES["german"] = Object.assign({}, BASES["english"], { "10": "B", "11": "H" });
 const CHORDS = {
     "major": "",
     "maj6": "<sup>6</sup>",
@@ -20,22 +19,56 @@ const CHORDS = {
     "dim7": "dim<sup>7</sup>",
     "m7b5": "mi<sup>7/5-</sup>"
 };
-export function create(locale) {
-    assert(locale in NAMES, `Locale "${locale}" not found`);
-    const dict = NAMES[locale];
-    function toneToString(tone) { return dict[tone]; }
-    function stringToTone(name) {
-        let index = dict.indexOf(name);
-        assert(index > -1, `Name "${name}" not found in locale "${locale}"`);
-        return index;
+function parseTone(str, bases) {
+    let base;
+    let first = str.charAt(0);
+    for (let p in bases) {
+        if (bases[p] == first.toUpperCase()) {
+            base = Number(p);
+        }
     }
+    if (base === undefined) {
+        throw new Error(`Cannot parse the base tone "${first}"`);
+    }
+    let i = 0;
+    while (++i < str.length) {
+        let a = str.charAt(i);
+        switch (a) {
+            case "#":
+            case "♯":
+                base += 1;
+                break;
+            case "b":
+            case "♭":
+                base -= 1;
+                break;
+            default:
+                throw new Error(`Cannot parse accidental "${a}"`);
+                break;
+        }
+    }
+    return (base + TONES) % TONES;
+}
+function serializeTone(tone, bases) {
+    if (tone in bases) {
+        return bases[tone];
+    }
+    tone -= 1;
+    assert(tone in bases, `Tone "${tone}" is unserializable`);
+    return `${bases[tone]}♯`;
+}
+export function create(naming) {
+    assert(naming in BASES, `Naming "${naming}" not found`);
+    const bases = BASES[naming];
+    function toneToString(tone) { return serializeTone(tone, bases); }
+    function stringToTone(name) { return parseTone(name, bases); }
     function chordToString(chord) {
         let base = toneToString(chord.base);
         let type = CHORDS[chord.type];
         return `${base}${type}`;
     }
     function stringToChord(str) {
-        let parts = str.match(/^(.[#b]?)(.*)/);
+        let parts = str.match(/^(.[#♯b♭]?)(.*)/);
         if (parts == null) {
             return null;
         }

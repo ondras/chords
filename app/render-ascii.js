@@ -2,7 +2,7 @@ import { toRoman, offsetFingers, fretCount, stripTags } from "./util.js";
 export function render(layout, name, offset) {
     const fingers = offsetFingers(layout.fingers, offset);
     let rows = [];
-    name = stripTags(name);
+    name = stripTags(name).replace(/♯/g, "#").replace(/♭/g, "b");
     rows.push(name);
     rows.push("");
     if (offset > 0) {

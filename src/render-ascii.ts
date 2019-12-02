@@ -7,7 +7,7 @@ export function render(layout: Layout, name: string, offset: number) {
 
 	let rows = [];
 
-	name = stripTags(name);
+	name = stripTags(name).replace(/♯/g, "#").replace(/♭/g, "b");
 	rows.push(name);
 	rows.push("");
 

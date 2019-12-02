@@ -50,9 +50,17 @@ function computeBarre(fingers) {
     return { fret, from };
 }
 function COMPARE(a, b) {
+    let b1 = !!a.barre;
+    let b2 = !!b.barre;
+    if (b1 != b2) {
+        return b1 ? -1 : 1;
+    }
     let m1 = max(a.fingers);
     let m2 = max(b.fingers);
-    return (m1 == m2 ? sum(a.fingers) - sum(b.fingers) : m1 - m2);
+    if (m1 != m2) {
+        return m1 - m2;
+    }
+    return sum(a.fingers) - sum(b.fingers);
 }
 function fingersOnString(string, chord, startFret, ctx) {
     let result = new Set();
