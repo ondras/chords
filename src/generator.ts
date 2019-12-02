@@ -1,4 +1,4 @@
-import { Instrument, Chord, Tone, Finger, Instance, Barre, TONES } from "./core.js";
+import { Instrument, Chord, Tone, Finger, Layout, Barre, TONES } from "./core.js";
 import { cartesianProduct } from "./util.js";
 
 const MAX_FRET = 3;
@@ -8,23 +8,23 @@ function sum(arr: number[]) { return arr.reduce((a, b) => a+b, 0); }
 function min(arr: number[]) { return Math.min(...arr); }
 function max(arr: number[]) { return Math.max(...arr); }
 
-function fingerCount(instance: Instance) {
-	if (instance.barre) {
-		const barre = instance.barre;
-		return 1 + instance.fingers.filter(f => f > barre.fret).length;
+function fingerCount(layout: Layout) {
+	if (layout.barre) {
+		const barre = layout.barre;
+		return 1 + layout.fingers.filter(f => f > barre.fret).length;
 	} else {
-		return instance.fingers.filter(f => f > 0).length;
+		return layout.fingers.filter(f => f > 0).length;
 	}
 }
 
-function canBePlayed(instance: Instance) {
-	if (fingerCount(instance) > AVAILABLE_FINGERS) { return false; }
+function canBePlayed(layout: Layout) {
+	if (fingerCount(layout) > AVAILABLE_FINGERS) { return false; }
 
-	const barre = instance.barre;
+	const barre = layout.barre;
 	if (!barre) { return true; }
 
-	for (let s=barre.from; s<instance.fingers.length; s++) {
-		if (instance.fingers[s] < 1) { return false; } // inside barret, but empty or none requested -> bail out
+	for (let s=barre.from; s<layout.fingers.length; s++) {
+		if (layout.fingers[s] < 1) { return false; } // inside barre, but empty or none requested -> bail out
 	}
 
 	return true;
@@ -50,7 +50,7 @@ function computeBarre(fingers: Finger[]): Barre | null {
 }
 
 
-function COMPARE(a: Instance, b: Instance) {
+function COMPARE(a: Layout, b: Layout) {
 	let m1 = max(a.fingers);
 	let m2 = max(b.fingers);
 	return (m1 == m2 ? sum(a.fingers) - sum(b.fingers) : m1 - m2);
@@ -82,42 +82,40 @@ function fingersOnString(string: Tone, chord: Chord, startFret: number, ctx:Cont
 	return result;
 }
 
-function hasAllTones(instance: Instance) {
-	let tones = new Set<Tone>(instance.chord.tones);
-	instance.fingers.forEach((f, i) => {
+function hasAllTones(layout: Layout, instrument: Instrument, chord: Chord) {
+	let tones = new Set<Tone>(chord.tones);
+	layout.fingers.forEach((f, i) => {
 		if (f == -1) { return; }
-		let tone = (f + instance.instrument[i]) % TONES;
+		let tone = (f + instrument[i]) % TONES;
 		tones.delete(tone);
 	});
 	return (tones.size == 0);
 }
 
-function expandRedundantTones(instance: Instance): Instance | Instance[] {
-	if (fingerCount(instance) <= AVAILABLE_FINGERS) { return instance; }
+function expandRedundantTones(layout: Layout, instrument: Instrument): Layout | Layout[] {
+	if (fingerCount(layout) <= AVAILABLE_FINGERS) { return layout; }
 
 	let toneToStrings = new Map<Tone, number[]>();
 
-	instance.fingers.forEach((f, i) => {
+	layout.fingers.forEach((f, i) => {
 		if (f < 1) { return; }
-		let tone = (f + instance.instrument[i]) % TONES;
+		let tone = (f + instrument[i]) % TONES;
 		let strings = toneToStrings.get(tone) || [];
 		strings.push(i);
 		toneToStrings.set(tone, strings);
 	});
 
-	let results: Instance[] = [];
+	let results: Layout[] = [];
 
 	toneToStrings.forEach(strings => {
 		if (strings.length < 2) { return; }
 		strings.forEach(string => {
-			let altFingers = instance.fingers.slice();
+			let altFingers = layout.fingers.slice();
 			altFingers[string] = -1;
 
-			let alternative: Instance = {
+			let alternative: Layout = {
 				fingers: altFingers,
-				instrument: instance.instrument,
-				chord: instance.chord,
-				barre: instance.barre
+				barre: layout.barre
 			}
 			results.push(alternative);
 		});
@@ -126,19 +124,22 @@ function expandRedundantTones(instance: Instance): Instance | Instance[] {
 	return results;
 }
 
-export function createInstances(instrument: Instrument, chord: Chord, startFret = 1): Instance[] {
-	let ctx = {rootFound:false};
+export function createLayouts(instrument: Instrument, chord: Chord, startFret = 1): Layout[] {
+	let ctx = {rootFound:false};	
 	let fingers = instrument.map(string => fingersOnString(string, chord, startFret, ctx));
 
-	function createInstance(fingers: Finger[]) {
+	function createLayout(fingers: Finger[]) {
 		let barre = computeBarre(fingers);
-		return {fingers, instrument, chord, barre};
+		return {fingers, barre, chord};
 	}
 
+	function hAT(layout: Layout) { return hasAllTones(layout, instrument, chord); }
+	function eRT(layout: Layout) { return expandRedundantTones(layout, instrument); }
+
 	return cartesianProduct(fingers)
-		.map(createInstance)
-		.filter(hasAllTones)
-		.flatMap(expandRedundantTones)
+		.map(createLayout)
+		.filter(hAT)
+		.flatMap(eRT)
 		.filter(canBePlayed)
 		.sort(COMPARE);
 }

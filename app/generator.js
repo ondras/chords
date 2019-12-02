@@ -5,27 +5,27 @@ const AVAILABLE_FINGERS = 4;
 function sum(arr) { return arr.reduce((a, b) => a + b, 0); }
 function min(arr) { return Math.min(...arr); }
 function max(arr) { return Math.max(...arr); }
-function fingerCount(instance) {
-    if (instance.barre) {
-        const barre = instance.barre;
-        return 1 + instance.fingers.filter(f => f > barre.fret).length;
+function fingerCount(layout) {
+    if (layout.barre) {
+        const barre = layout.barre;
+        return 1 + layout.fingers.filter(f => f > barre.fret).length;
     }
     else {
-        return instance.fingers.filter(f => f > 0).length;
+        return layout.fingers.filter(f => f > 0).length;
     }
 }
-function canBePlayed(instance) {
-    if (fingerCount(instance) > AVAILABLE_FINGERS) {
+function canBePlayed(layout) {
+    if (fingerCount(layout) > AVAILABLE_FINGERS) {
         return false;
     }
-    const barre = instance.barre;
+    const barre = layout.barre;
     if (!barre) {
         return true;
     }
-    for (let s = barre.from; s < instance.fingers.length; s++) {
-        if (instance.fingers[s] < 1) {
+    for (let s = barre.from; s < layout.fingers.length; s++) {
+        if (layout.fingers[s] < 1) {
             return false;
-        } // inside barret, but empty or none requested -> bail out
+        } // inside barre, but empty or none requested -> bail out
     }
     return true;
 }
@@ -79,27 +79,27 @@ function fingersOnString(string, chord, startFret, ctx) {
     }
     return result;
 }
-function hasAllTones(instance) {
-    let tones = new Set(instance.chord.tones);
-    instance.fingers.forEach((f, i) => {
+function hasAllTones(layout, instrument, chord) {
+    let tones = new Set(chord.tones);
+    layout.fingers.forEach((f, i) => {
         if (f == -1) {
             return;
         }
-        let tone = (f + instance.instrument[i]) % TONES;
+        let tone = (f + instrument[i]) % TONES;
         tones.delete(tone);
     });
     return (tones.size == 0);
 }
-function expandRedundantTones(instance) {
-    if (fingerCount(instance) <= AVAILABLE_FINGERS) {
-        return instance;
+function expandRedundantTones(layout, instrument) {
+    if (fingerCount(layout) <= AVAILABLE_FINGERS) {
+        return layout;
     }
     let toneToStrings = new Map();
-    instance.fingers.forEach((f, i) => {
+    layout.fingers.forEach((f, i) => {
         if (f < 1) {
             return;
         }
-        let tone = (f + instance.instrument[i]) % TONES;
+        let tone = (f + instrument[i]) % TONES;
         let strings = toneToStrings.get(tone) || [];
         strings.push(i);
         toneToStrings.set(tone, strings);
@@ -110,30 +110,30 @@ function expandRedundantTones(instance) {
             return;
         }
         strings.forEach(string => {
-            let altFingers = instance.fingers.slice();
+            let altFingers = layout.fingers.slice();
             altFingers[string] = -1;
             let alternative = {
                 fingers: altFingers,
-                instrument: instance.instrument,
-                chord: instance.chord,
-                barre: instance.barre
+                barre: layout.barre
             };
             results.push(alternative);
         });
     });
     return results;
 }
-export function createInstances(instrument, chord, startFret = 1) {
+export function createLayouts(instrument, chord, startFret = 1) {
     let ctx = { rootFound: false };
     let fingers = instrument.map(string => fingersOnString(string, chord, startFret, ctx));
-    function createInstance(fingers) {
+    function createLayout(fingers) {
         let barre = computeBarre(fingers);
-        return { fingers, instrument, chord, barre };
+        return { fingers, barre, chord };
     }
+    function hAT(layout) { return hasAllTones(layout, instrument, chord); }
+    function eRT(layout) { return expandRedundantTones(layout, instrument); }
     return cartesianProduct(fingers)
-        .map(createInstance)
-        .filter(hasAllTones)
-        .flatMap(expandRedundantTones)
+        .map(createLayout)
+        .filter(hAT)
+        .flatMap(eRT)
         .filter(canBePlayed)
         .sort(COMPARE);
 }

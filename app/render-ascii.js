@@ -1,8 +1,8 @@
 import { toRoman, offsetFingers, fretCount, stripTags } from "./util.js";
-export function render(instance, localizer, offset) {
-    const fingers = offsetFingers(instance.fingers, offset);
+export function render(layout, name, offset) {
+    const fingers = offsetFingers(layout.fingers, offset);
     let rows = [];
-    let name = stripTags(localizer.chordToString(instance.chord));
+    name = stripTags(name);
     rows.push(name);
     rows.push("");
     if (offset > 0) {
@@ -22,7 +22,7 @@ export function render(instance, localizer, offset) {
             if (f == fret) {
                 return "o";
             }
-            if (instance.barre && instance.barre.fret - offset == fret && instance.barre.from <= i) {
+            if (layout.barre && layout.barre.fret - offset == fret && layout.barre.from <= i) {
                 return "-";
             }
             return "|";

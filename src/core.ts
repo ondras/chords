@@ -16,10 +16,8 @@ export interface Barre {
 	from: number;
 }
 
-export interface Instance {
-	instrument: Instrument;
+export interface Layout {
 	fingers: Finger[];
-	chord: Chord;
 	barre: Barre | null;
 }
 

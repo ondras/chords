@@ -30,30 +30,30 @@ function renderMuteString(x, y) {
     const d = `M ${x} ${y} m -${L / 2} -${L / 2} l ${L} ${L} m ${-L} 0 l ${L} ${-L}`;
     return node("path", { d, stroke: "#000", "stroke-width": "1.5", "stroke-linecap": "round" });
 }
-function renderName(instance, localizer) {
-    let x = String(PADDING_LR + (instance.instrument.length - 1) * STRING / 2);
+function renderName(layout, name) {
+    let x = String(PADDING_LR + (layout.fingers.length - 1) * STRING / 2);
     let y = String(PADDING_BASE + FONT_LARGE / 2);
-    let name = node("text", { x, y, "text-anchor": "middle", "font-size": String(FONT_LARGE) });
-    name.innerHTML = localizer.chordToString(instance.chord);
-    Array.from(name.querySelectorAll("sup")).forEach(fixSup);
-    return name;
+    let nameNode = node("text", { x, y, "text-anchor": "middle", "font-size": String(FONT_LARGE) });
+    nameNode.innerHTML = name;
+    Array.from(nameNode.querySelectorAll("sup")).forEach(fixSup);
+    return nameNode;
 }
-function renderStrings(instance, fretCount) {
+function renderStrings(layout, fretCount) {
     const left = PADDING_LR;
     const top = PADDING_TOP;
     const length = fretCount * FRET;
     const stroke = "#000";
-    let strings = instance.instrument.map((_, i) => {
+    let strings = layout.fingers.map((_, i) => {
         return `M ${left + i * STRING} ${top} v ${length}`;
     });
     let d = strings.join(" ");
     return node("path", { d, stroke, "shape-rendering": "crispEdges", "stroke-linecap": "square" });
 }
-function renderFrets(instance, fretCount, offset) {
+function renderFrets(layout, fretCount, offset) {
     let frag = document.createDocumentFragment();
     const left = PADDING_LR;
     const top = PADDING_TOP;
-    const length = (instance.instrument.length - 1) * STRING;
+    const length = (layout.fingers.length - 1) * STRING;
     const stroke = "#000";
     let frets = [];
     for (let i = 0; i <= fretCount; i++) {
@@ -74,13 +74,13 @@ function renderFrets(instance, fretCount, offset) {
     }
     return frag;
 }
-function renderBarre(instance, offset) {
+function renderBarre(layout, offset) {
     let frag = document.createDocumentFragment();
-    const barre = instance.barre;
+    const barre = layout.barre;
     if (barre) {
         let x = PADDING_LR + barre.from * STRING;
         let y = PADDING_TOP + (barre.fret - offset - 0.5) * FRET;
-        let length = (instance.fingers.length - barre.from - 1) * STRING;
+        let length = (layout.fingers.length - barre.from - 1) * STRING;
         let d = `M ${x} ${y} h ${length}`;
         frag.appendChild(node("path", { d, stroke: "#000", "stroke-width": "3", "shape-rendering": "crispEdges", "stroke-linecap": "butt" }));
     }
@@ -95,11 +95,9 @@ function renderFingers(fingers) {
         const x = left + i * STRING;
         if (finger == -1) {
             return renderMuteString(x, top - SYMBOL * 1.5);
-            return null;
         }
         else if (finger == 0) {
             return renderEmptyString(x, top - SYMBOL * 1.5);
-            return null;
         }
         const cx = String(x);
         const cy = String(top + (finger - 0.5) * FRET);
@@ -107,17 +105,17 @@ function renderFingers(fingers) {
     }).forEach(n => n && frag.appendChild(n));
     return frag;
 }
-export function render(instance, localizer, offset) {
-    const fingers = offsetFingers(instance.fingers, offset);
+export function render(layout, name, offset) {
+    const fingers = offsetFingers(layout.fingers, offset);
     const fc = fretCount(fingers);
-    const width = (instance.instrument.length - 1) * STRING + 2 * PADDING_LR;
+    const width = (layout.fingers.length - 1) * STRING + 2 * PADDING_LR;
     const height = fc * FRET + PADDING_TOP + PADDING_BASE;
     const viewBox = `0 0 ${width} ${height}`;
     let svg = node("svg", { viewBox, width: String(width), height: String(height) });
-    svg.appendChild(renderName(instance, localizer));
-    svg.appendChild(renderStrings(instance, fc));
-    svg.appendChild(renderFrets(instance, fc, offset));
-    svg.appendChild(renderBarre(instance, offset));
+    svg.appendChild(renderName(layout, name));
+    svg.appendChild(renderStrings(layout, fc));
+    svg.appendChild(renderFrets(layout, fc, offset));
+    svg.appendChild(renderBarre(layout, offset));
     svg.appendChild(renderFingers(fingers));
     return svg;
 }

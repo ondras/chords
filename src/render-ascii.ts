@@ -1,14 +1,13 @@
-import { Localizer } from "./localizer.js";
-import { Instance } from "./core.js";
+import { Layout } from "./core.js";
 import { toRoman, offsetFingers, fretCount, stripTags } from "./util.js";
 
 
-export function render(instance: Instance, localizer: Localizer, offset: number) {
-	const fingers = offsetFingers(instance.fingers, offset);
+export function render(layout: Layout, name: string, offset: number) {
+	const fingers = offsetFingers(layout.fingers, offset);
 
 	let rows = [];
 
-	let name = stripTags(localizer.chordToString(instance.chord));
+	name = stripTags(name);
 	rows.push(name);
 	rows.push("");
 
@@ -30,7 +29,7 @@ export function render(instance: Instance, localizer: Localizer, offset: number)
 	for (let fret = 1; fret <= count; fret++) {
 		let row = fingers.map((f, i) => {
 			if (f == fret) { return "o"; }
-			if (instance.barre && instance.barre.fret-offset == fret && instance.barre.from <= i) { return "-"; }
+			if (layout.barre && layout.barre.fret-offset == fret && layout.barre.from <= i) { return "-"; }
 			return "|";
 		});
 		rows.push(row.join(""));

@@ -7,7 +7,7 @@ import "./app/sanity-check.js";
 import { createChord } from "./app/core.js";
 import { GUITAR } from "./app/instruments.js";
 import * as localizer from "./app/localizer.js";
-import { createInstances } from "./app/generator.js";
+import { createLayouts } from "./app/generator.js";
 import * as render from "./app/render.js";
 
 
@@ -15,20 +15,20 @@ let cs = localizer.create("cs");
 
 ["C", "D", "E", "F", "G", "A", "B", "H", "H7", "D9", "Hmi7/5-", "Fmaj7"].forEach(str => {
 	let chord = cs.stringToChord(str);
-	createInstances(GUITAR, chord, 1).forEach(i => {
-		console.log(render.ascii(i, cs));
-		document.body.appendChild(render.svg(i, cs));
+	let name = cs.chordToString(chord);
+	createLayouts(GUITAR, chord, 1).forEach(l => {
+		console.log(render.ascii(l, name));
+		document.body.appendChild(render.svg(l, name));
 	});
 });
 
 
-
 let D9 = createChord("dom9", cs.stringToTone("D"));
-createInstances(GUITAR, D9, 4).forEach(i => {
-	console.log(render.ascii(i, cs));
-	document.body.appendChild(render.svg(i, cs));
+let name = cs.chordToString(D9);
+createLayouts(GUITAR, D9, 4).forEach(l => {
+	console.log(render.ascii(l, name));
+	document.body.appendChild(render.svg(l, name));
 });
-
 
 
 </script>
