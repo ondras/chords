@@ -1,4 +1,4 @@
-import { Finger, Barre } from "./core.js";
+import { Finger, Barre } from "./layouts.js";
 import * as render from "./render.js";
 
 class ChordLayout extends HTMLElement {

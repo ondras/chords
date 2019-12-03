@@ -1,8 +1,14 @@
-import { Finger, Barre } from "./core.js";
 import * as instruments from "./instruments.js";
 import { Chord } from "./chords.js";
 import { Tone, TONES } from "./tones.js";
 import { cartesianProduct } from "./util.js";
+
+export type Finger = number;
+
+export interface Barre {
+	fret: Finger;
+	from: number;
+}
 
 export interface Layout {
 	fingers: Finger[];

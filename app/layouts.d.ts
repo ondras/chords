@@ -1,5 +1,9 @@
-import { Finger, Barre } from "./core.js";
 import { Chord } from "./chords.js";
+export declare type Finger = number;
+export interface Barre {
+    fret: Finger;
+    from: number;
+}
 export interface Layout {
     fingers: Finger[];
     barre: Barre | null;
