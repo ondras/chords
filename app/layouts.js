@@ -1,4 +1,5 @@
-import { TONES } from "./core.js";
+import * as instruments from "./instruments.js";
+import { TONES } from "./tones.js";
 import { cartesianProduct } from "./util.js";
 const MAX_FRET = 3;
 const AVAILABLE_FINGERS = 4;
@@ -74,11 +75,11 @@ function fingersOnString(string, chord, startFret, ctx) {
         if (index == -1) {
             return;
         }
-        if (ctx.rootFound) {
+        if (ctx.tonicFound || !ctx.mustStartWithTonic) {
             result.add(fret);
         }
         else if (index == 0) {
-            ctx.rootFound = true;
+            ctx.tonicFound = true;
             result.add(fret);
         }
     });
@@ -93,7 +94,7 @@ function hasAllTones(layout, instrument, chord) {
         if (f == -1) {
             return;
         }
-        let tone = (f + instrument[i]) % TONES;
+        let tone = (f + instrument.strings[i]) % TONES;
         tones.delete(tone);
     });
     return (tones.size == 0);
@@ -107,7 +108,7 @@ function expandRedundantTones(layout, instrument) {
         if (f < 1) {
             return;
         }
-        let tone = (f + instrument[i]) % TONES;
+        let tone = (f + instrument.strings[i]) % TONES;
         let strings = toneToStrings.get(tone) || [];
         strings.push(i);
         toneToStrings.set(tone, strings);
@@ -129,9 +130,13 @@ function expandRedundantTones(layout, instrument) {
     });
     return results;
 }
-export function createLayouts(instrument, chord, startFret = 1) {
-    let ctx = { rootFound: false };
-    let fingers = instrument.map(string => fingersOnString(string, chord, startFret, ctx));
+export function create(instrumentName, chord, startFret = 1) {
+    let instrument = instruments.get(instrumentName);
+    let ctx = {
+        tonicFound: false,
+        mustStartWithTonic: instrument.mustStartWithTonic
+    };
+    let fingers = instrument.strings.map(string => fingersOnString(string, chord, startFret, ctx));
     function createLayout(fingers) {
         let barre = computeBarre(fingers);
         return { fingers, barre, chord };

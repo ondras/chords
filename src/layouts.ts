@@ -1,5 +1,13 @@
-import { Instrument, Chord, Tone, Finger, Layout, Barre, TONES } from "./core.js";
+import { Finger, Barre } from "./core.js";
+import * as instruments from "./instruments.js";
+import { Chord } from "./chords.js";
+import { Tone, TONES } from "./tones.js";
 import { cartesianProduct } from "./util.js";
+
+export interface Layout {
+	fingers: Finger[];
+	barre: Barre | null;
+}
 
 const MAX_FRET = 3;
 const AVAILABLE_FINGERS = 4;
@@ -63,7 +71,8 @@ function COMPARE(a: Layout, b: Layout) {
 }
 
 interface Context {
-	rootFound: boolean;
+	tonicFound: boolean;
+	mustStartWithTonic: boolean;
 }
 function fingersOnString(string: Tone, chord: Chord, startFret: number, ctx:Context) {
 	let result = new Set<Finger>();
@@ -75,10 +84,10 @@ function fingersOnString(string: Tone, chord: Chord, startFret: number, ctx:Cont
 		let index = chord.tones.indexOf(t);
 		if (index == -1) { return; }
 
-		if (ctx.rootFound) {
+		if (ctx.tonicFound || !ctx.mustStartWithTonic) {
 			result.add(fret);
 		} else if (index == 0) {
-			ctx.rootFound = true;
+			ctx.tonicFound = true;
 			result.add(fret);
 		}
 	});
@@ -88,24 +97,24 @@ function fingersOnString(string: Tone, chord: Chord, startFret: number, ctx:Cont
 	return result;
 }
 
-function hasAllTones(layout: Layout, instrument: Instrument, chord: Chord) {
+function hasAllTones(layout: Layout, instrument: instruments.Instrument, chord: Chord) {
 	let tones = new Set<Tone>(chord.tones);
 	layout.fingers.forEach((f, i) => {
 		if (f == -1) { return; }
-		let tone = (f + instrument[i]) % TONES;
+		let tone = (f + instrument.strings[i]) % TONES;
 		tones.delete(tone);
 	});
 	return (tones.size == 0);
 }
 
-function expandRedundantTones(layout: Layout, instrument: Instrument): Layout | Layout[] {
+function expandRedundantTones(layout: Layout, instrument: instruments.Instrument): Layout | Layout[] {
 	if (fingerCount(layout) <= AVAILABLE_FINGERS) { return layout; }
 
 	let toneToStrings = new Map<Tone, number[]>();
 
 	layout.fingers.forEach((f, i) => {
 		if (f < 1) { return; }
-		let tone = (f + instrument[i]) % TONES;
+		let tone = (f + instrument.strings[i]) % TONES;
 		let strings = toneToStrings.get(tone) || [];
 		strings.push(i);
 		toneToStrings.set(tone, strings);
@@ -130,9 +139,14 @@ function expandRedundantTones(layout: Layout, instrument: Instrument): Layout | 
 	return results;
 }
 
-export function createLayouts(instrument: Instrument, chord: Chord, startFret = 1): Layout[] {
-	let ctx = {rootFound:false};	
-	let fingers = instrument.map(string => fingersOnString(string, chord, startFret, ctx));
+export function create(instrumentName: string, chord: Chord, startFret = 1): Layout[] {
+	let instrument = instruments.get(instrumentName);
+	let ctx: Context = {
+		tonicFound: false,
+		mustStartWithTonic: instrument.mustStartWithTonic
+	};
+
+	let fingers = instrument.strings.map(string => fingersOnString(string, chord, startFret, ctx));
 
 	function createLayout(fingers: Finger[]) {
 		let barre = computeBarre(fingers);

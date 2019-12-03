@@ -5,6 +5,7 @@
 		"target": "es2019",
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,
-		"noEmitOnError": true
+		"noEmitOnError": true,
+		"declaration": true
 	}
 }

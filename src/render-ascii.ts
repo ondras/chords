@@ -1,4 +1,4 @@
-import { Layout } from "./core.js";
+import { Layout } from "./layouts.js";
 import { toRoman, offsetFingers, fretCount, stripTags } from "./util.js";
 
 
@@ -6,33 +6,38 @@ export function render(layout: Layout, name: string, offset: number) {
 	const fingers = offsetFingers(layout.fingers, offset);
 
 	let rows = [];
-
-	name = stripTags(name).replace(/♯/g, "#").replace(/♭/g, "b");
-	rows.push(name);
-	rows.push("");
-
+	let offsetFill = "";
+	let offsetMark = "";
 	if (offset > 0) {
-		rows.push(`${toRoman(offset+1).toUpperCase()}.`);
+		offsetMark = `${toRoman(offset+1).toUpperCase()} `;
+		offsetFill = new Array(offsetMark.length+1).join(" ");
 	}
 
-	rows.push(fingers.map(f => {
+	name = stripTags(name).replace(/♯/g, "#").replace(/♭/g, "b");
+	rows.push(`${offsetFill}${name}`);
+	rows.push("");
+
+	let f = fingers.map(f => {
 		switch (f) {
 			case -1: return "x";
 			case 0: return "o";
 			default: return " ";
 		}
-	}).join(""));
+	}).join("")
+	rows.push(`${offsetFill}${f}`);
 
-	rows.push(fingers.map(_ => offset ? "-" : "=").join(""));
+	let fret = fingers.map(_ => offset ? "-" : "=").join("");
+	rows.push(`${offsetFill}${fret}`);
 
 	let count = fretCount(fingers);
 	for (let fret = 1; fret <= count; fret++) {
+		let prefix = (fret == 1 ? offsetMark : offsetFill);
 		let row = fingers.map((f, i) => {
 			if (f == fret) { return "o"; }
 			if (layout.barre && layout.barre.fret-offset == fret && layout.barre.from <= i) { return "-"; }
 			return "|";
 		});
-		rows.push(row.join(""));
+		rows.push(`${prefix}${row.join("")}`);
 	}
 
 	return rows.join("\n");

@@ -1,22 +1,25 @@
-<style>
-	body { font-family: serif; }
-</style>
 <script type="module">
 import "./app/sanity-check.js";
 
-import { createChord } from "./app/core.js";
-import { GUITAR } from "./app/instruments.js";
-import * as localizer from "./app/localizer.js";
-import { createLayouts } from "./app/generator.js";
+import * as chords from "./app/chords.js";
+import * as layouts from "./app/layouts.js";
 import * as render from "./app/render.js";
 
-
-let loc = localizer.create("german");
-
-["C", "D", "Dmi", "E", "Emi", "F", "Fmi", "G", "A", "Ami", "B", "H", "H7", "Hmi7/5-", "Fmaj7"].forEach(str => {
+/*
+["C", "D", "E", "F", "G", "A", "H"].forEach(str => {
 	let chord = loc.stringToChord(str);
 	let name = loc.chordToString(chord);
-	createLayouts(GUITAR, chord, 1).forEach(l => {
+	layouts.create("ukulele", chord, 1).forEach(l => {
+		console.log(render.ascii(l, name));
+		document.body.appendChild(render.svg(l, name));
+	});
+});
+*/
+/* */
+["C", "D", "Dmi", "E", "Emi", "F", "F7", "Fmi", "G", "A", "Ami", "B", "H", "H7", "Hmi7/5-", "Fmaj7"].forEach(str => {
+	let chord = chords.parse(str, "german");
+	let name = chords.toString(chord, "german");
+	layouts.create("guitar", chord, 1).forEach(l => {
 		console.log(render.ascii(l, name));
 		document.body.appendChild(render.svg(l, name));
 	});
@@ -24,11 +27,12 @@ let loc = localizer.create("german");
 
 
 ["D9", "C#mi7"].forEach(str => {
-	let chord = loc.stringToChord(str);
-	let name = loc.chordToString(chord);
-	createLayouts(GUITAR, chord, 4).forEach(l => {
+	let chord = chords.parse(str, "german");
+	let name = chords.toString(chord, "german");
+	layouts.create("guitar", chord, 4).forEach(l => {
 		console.log(render.ascii(l, name));
 		document.body.appendChild(render.svg(l, name));
 	});
 });
+// */
 </script>

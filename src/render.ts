@@ -1,4 +1,4 @@
-import { Layout } from "./core.js";
+import { Layout } from "./layouts.js";
 
 import * as svgRender from "./render-svg.js";
 import * as asciiRender from "./render-ascii.js";

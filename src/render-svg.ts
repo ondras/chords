@@ -1,4 +1,4 @@
-import { Layout } from "./core.js";
+import { Layout } from "./layouts.js";
 import { toRoman, offsetFingers, fretCount } from "./util.js";
 
 const SVGNS = "http://www.w3.org/2000/svg";
@@ -86,10 +86,10 @@ function renderFrets(layout: Layout, fretCount: number, offset: number) {
 		let d = `M ${left-3} ${top} h ${length+6}`;
 		frag.appendChild(node("path", {d, stroke, "stroke-width":"6", "shape-rendering":"crispEdges", "stroke-linecap":"round"}));
 	} else {
-		let x = String(left - 3);
+		let x = String(left - 4);
 		let y = String(top + FRET/2);
 		let text = node("text", {x, y, "text-anchor": "end", "dominant-baseline": "middle", "font-size": String(FONT_SMALL)});
-		text.textContent = `${toRoman(offset+1).toUpperCase()}.`;
+		text.textContent = `${toRoman(offset+1).toUpperCase()}`;
 		frag.appendChild(text);
 	}
 
