@@ -1,6 +1,4 @@
-import * as chords from "./chords.js";
-import * as tones from "./tones.js";
-import * as layouts from "./layouts.js";
+import { chords, tones, layouts } from "./api.js";
 import { assertEquals } from "./util.js";
 
 
