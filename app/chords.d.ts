@@ -10,6 +10,11 @@ export declare function parse(str: string, naming?: string): {
     tones: number[];
 } | null;
 export declare function toString(chord: Chord, naming?: string): string;
+export declare function transpose(chord: Chord, offset: number): {
+    type: string;
+    base: number;
+    tones: number[];
+};
 export declare function create(type: string, base: tones.Tone): {
     type: string;
     base: number;

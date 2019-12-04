@@ -8,4 +8,10 @@ export interface Layout {
     fingers: Finger[];
     barre: Barre | null;
 }
-export declare function create(instrumentName: string, chord: Chord, startFret?: number): Layout[];
+interface Options {
+    startFret: number;
+    maxFret: number;
+    strategy: "exact" | "nonempty" | "all";
+}
+export declare function create(instrumentName: string, chord: Chord, options?: Partial<Options>): Layout[];
+export {};

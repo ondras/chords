@@ -1,8 +1,15 @@
 import { assert } from "./util.js";
-export const TONES = 12;
+const TONES = 12;
 const BASES = {};
 BASES["english"] = { "0": "C", "2": "D", "4": "E", "5": "F", "7": "G", "9": "A", "10": "B♭", "11": "B" };
 BASES["german"] = Object.assign({}, BASES["english"], { "10": "B", "11": "H" });
+function clamp(num) {
+    num = num % TONES;
+    return (num < 0 ? num + TONES : num);
+}
+export function transpose(tone, offset) {
+    return clamp(tone + offset);
+}
 export function parse(str, naming = "english") {
     assert(naming in BASES, `Naming "${naming}" not found`);
     const bases = BASES[naming];

@@ -51,11 +51,14 @@ export function toString(chord, naming) {
     let type = SUFFIXES[chord.type];
     return `${base}${type}`;
 }
+export function transpose(chord, offset) {
+    return create(chord.type, tones.transpose(chord.base, offset));
+}
 export function create(type, base) {
     assert(type in CHORDS, `Chord "${type}" not found`);
     return {
         type,
         base,
-        tones: CHORDS[type].map(tone => (tone + base) % tones.TONES)
+        tones: CHORDS[type].map(offset => tones.transpose(base, offset))
     };
 }

@@ -60,7 +60,10 @@ export function toString(chord: Chord, naming?: string) {
 	let base = tones.toString(chord.base, naming);
 	let type = SUFFIXES[chord.type];
 	return `${base}${type}`;
+}
 
+export function transpose(chord: Chord, offset: number) {
+	return create(chord.type, tones.transpose(chord.base, offset));
 }
 
 export function create(type: string, base: tones.Tone) {
@@ -69,6 +72,6 @@ export function create(type: string, base: tones.Tone) {
 	return {
 		type,
 		base,
-		tones: CHORDS[type].map(tone => (tone + base) % tones.TONES)
+		tones: CHORDS[type].map(offset => tones.transpose(base, offset))
 	}
 }

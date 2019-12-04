@@ -1,13 +1,22 @@
 import { assert } from "./util.js";
 
-export const TONES = 12;
 export type Tone = number;
 
 type Bases = {[tone:string]: string};
 
+const TONES = 12;
 const BASES: {[naming:string]: Bases} = {};
 BASES["english"] = {"0": "C", "2": "D", "4": "E", "5": "F", "7": "G", "9": "A", "10": "B♭", "11": "B"};
 BASES["german"] = Object.assign({}, BASES["english"], {"10": "B", "11": "H"});
+
+function clamp(num: number): Tone {
+	num = num % TONES;
+	return (num < 0 ? num+TONES : num);
+}
+
+export function transpose(tone: Tone, offset: number) {
+	return clamp(tone+offset);
+}
 
 export function parse(str: string, naming="english") {
 	assert(naming in BASES, `Naming "${naming}" not found`);

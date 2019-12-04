@@ -66,8 +66,8 @@ function renderFrets(layout, fretCount, offset) {
         frag.appendChild(node("path", { d, stroke, "stroke-width": "6", "shape-rendering": "crispEdges", "stroke-linecap": "round" }));
     }
     else {
-        let x = String(left - 4);
-        let y = String(top + FRET / 2);
+        let x = String(left - 8);
+        let y = String(top + FRET / 2 - 2);
         let text = node("text", { x, y, "text-anchor": "end", "dominant-baseline": "middle", "font-size": String(FONT_SMALL) });
         text.textContent = `${toRoman(offset + 1).toUpperCase()}`;
         frag.appendChild(text);

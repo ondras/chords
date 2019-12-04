@@ -5,34 +5,42 @@ import * as chords from "./app/chords.js";
 import * as layouts from "./app/layouts.js";
 import * as render from "./app/render.js";
 
-/*
-["C", "D", "E", "F", "G", "A", "H"].forEach(str => {
-	let chord = loc.stringToChord(str);
-	let name = loc.chordToString(chord);
-	layouts.create("ukulele", chord, 1).forEach(l => {
-		console.log(render.ascii(l, name));
-		document.body.appendChild(render.svg(l, name));
-	});
-});
-*/
 /* */
-["C", "D", "Dmi", "E", "Emi", "F", "F7", "Fmi", "G", "A", "Ami", "B", "H", "H7", "Hmi7/5-", "Fmaj7"].forEach(str => {
-	let chord = chords.parse(str, "german");
-	let name = chords.toString(chord, "german");
-	layouts.create("guitar", chord, 1).forEach(l => {
+["Cdim7"].forEach(str => {
+	let chord = chords.parse(str);
+	let name = chords.toString(chord);
+	layouts.create("guitar", chord, {minFret:1, strategy:"all"}).forEach(l => {
 		console.log(render.ascii(l, name));
 		document.body.appendChild(render.svg(l, name));
 	});
 });
 
+document.body.appendChild(document.createElement("br"));
+["C", "D", "D9", "Dmi", "E", "Emi", "F", "F7", "Fmi", "G", "A", "Ami", "B", "H", "H7", "Hmi7/5-", "Fmaj7"].forEach(str => {
+	let chord = chords.parse(str, "german");
+	let name = chords.toString(chord, "german");
+	layouts.create("guitar", chord, {strategy:"nonempty"}).forEach(l => {
+		console.log(render.ascii(l, name));
+		document.body.appendChild(render.svg(l, name));
+	});
+});
+/*
+let t = ["C", "F", "G"]
+	.map(name => chords.parse(name))
+	.map(ch => chords.transpose(ch, 4))
+	.map(ch => chords.toString(ch, "german"))
+console.log(t);
+*/
 
 ["D9", "C#mi7"].forEach(str => {
 	let chord = chords.parse(str, "german");
 	let name = chords.toString(chord, "german");
-	layouts.create("guitar", chord, 4).forEach(l => {
+	layouts.create("guitar", chord, {startFret:4}).forEach(l => {
 		console.log(render.ascii(l, name));
 		document.body.appendChild(render.svg(l, name));
 	});
 });
-// */
+
+
+
 </script>
