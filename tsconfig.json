@@ -1,11 +1,12 @@
 {
 	"compilerOptions": {
 		"strict": true,
-		"outDir": "app",
+		"outDir": "lib",
 		"target": "es2019",
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,
 		"noEmitOnError": true,
-		"declaration": true
+		"declaration": true,
+		"incremental": true
 	}
 }
