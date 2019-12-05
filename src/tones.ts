@@ -22,6 +22,7 @@ export function parse(str: string, naming="english") {
 	assert(naming in BASES, `Naming "${naming}" not found`);
 	const bases = BASES[naming];
 
+	str = str.trim();
 	let base: number | undefined;
 
 	let first = str.charAt(0);

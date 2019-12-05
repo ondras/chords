@@ -44,8 +44,10 @@ const SUFFIXES: {[type:string]: string} = {
 }
 
 export function parse(str: string, naming?: string) {
+	str = str.trim();
+
 	let parts = str.match(/^(.[#♯b♭]?)(.*)/);
-	if (parts == null) { return null; }
+	if (parts == null) { throw new Error(`Cannot split chord "${str}"`); }
 
 	let base = tones.parse(parts[1], naming);
 	for (let type in CHORDS) {
@@ -53,7 +55,7 @@ export function parse(str: string, naming?: string) {
 		if (suffix == parts[2]) { return create(type, base); }
 	}
 
-	return null;
+	throw new Error(`No known type found for "${str}"`);
 }
 
 export function toString(chord: Chord, naming?: string) {
