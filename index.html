@@ -4,15 +4,15 @@ import "./lib/sanity-check.js";
 import { chords, layouts, render } from "./lib/api.js";
 
 /* */
-["Cdim7"].forEach(str => {
+["G7"].forEach(str => {
 	let chord = chords.parse(str);
 	let name = chords.toString(chord);
-	layouts.create("guitar", chord, {minFret:1, strategy:"all"}).forEach(l => {
+	layouts.create("guitar", chord, {minFret:1}).forEach(l => {
 		console.log(render.ascii(l, name));
 		document.body.appendChild(render.svg(l, name));
 	});
 });
-
+/*
 document.body.appendChild(document.createElement("br"));
 ["C", "D", "D9", "Dmi", "E", "Emi", "F", "F7", "Fmi", "G", "A", "Ami", "B", "H", "H7", "Hmi7/5-", "Fmaj7"].forEach(str => {
 	let chord = chords.parse(str, "german");
@@ -29,7 +29,7 @@ let t = ["C", "F", "G"]
 	.map(ch => chords.toString(ch, "german"))
 console.log(t);
 */
-
+/*
 ["D9", "C#mi7"].forEach(str => {
 	let chord = chords.parse(str, "german");
 	let name = chords.toString(chord, "german");
@@ -39,6 +39,6 @@ console.log(t);
 	});
 });
 
-
+*/
 
 </script>

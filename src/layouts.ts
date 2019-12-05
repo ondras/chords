@@ -203,14 +203,6 @@ export function create(instrumentName: string, chord: Chord, options:Partial<Opt
 	const instrument = instruments.get(instrumentName);
 	let results: Layout[] = [];
 
-	let cache = new Set();
-	function deduplicate(layout: Layout) {
-		let str = layout.fingers.join(",");
-		if (cache.has(str)) { return false; }
-		cache.add(str);
-		return true;
-	}
-
 	let fret = opts.startFret;
 	while (fret <= opts.maxFret) {
 		let layouts = createAtFret(instrument, chord, fret, opts.maxFret);
@@ -221,10 +213,17 @@ export function create(instrumentName: string, chord: Chord, options:Partial<Opt
 			results = layouts;
 			break;
 		} else {
-			layouts.filter(deduplicate).forEach(l => results.push(l));
+			results = results.concat(layouts);
 		}
 		fret++;
 	}
 
-	return results.sort(COMPARE);
+	let cache = new Set();
+	function deduplicate(layout: Layout) {
+		let str = layout.fingers.join(",");
+		if (cache.has(str)) { return false; }
+		cache.add(str);
+		return true;
+	}
+	return results.filter(deduplicate).sort(COMPARE);
 }
