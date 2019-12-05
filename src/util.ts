@@ -13,14 +13,13 @@ export function toRoman(n: number) {
 
 	function applyComponent(n: number, value: number, token: string) {
 		while (n >= value) {
-			tokens.unshift(token);
+			tokens.push(token);
 			n -= value;
 		}
 		return n;
 	}
 
 	n = applyComponent(n, 10, "x");
-	n = applyComponent(n, 9, "ix");
 	n = applyComponent(n, 9, "ix");
 	n = applyComponent(n, 5, "v");
 	n = applyComponent(n, 4, "iv");
