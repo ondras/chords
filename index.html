@@ -1,13 +1,13 @@
 <script type="module">
-import "./lib/sanity-check.js";
+// import "./lib/sanity-check.js";
 
 import { chords, layouts, render } from "./lib/api.js";
 
 /* */
-["G7"].forEach(str => {
+["C+7"].forEach(str => {
 	let chord = chords.parse(str);
 	let name = chords.toString(chord);
-	layouts.create("guitar", chord, {minFret:1}).forEach(l => {
+	layouts.create("guitar", chord, {startFret:1, fingerRange:4, strategy:"all"}).forEach(l => {
 		console.log(render.ascii(l, name));
 		document.body.appendChild(render.svg(l, name));
 	});

@@ -11,6 +11,7 @@ export interface Layout {
 interface Options {
     startFret: number;
     maxFret: number;
+    fingerRange: number;
     strategy: "exact" | "nonempty" | "all";
 }
 export declare function create(instrumentName: string, chord: Chord, options?: Partial<Options>): Layout[];

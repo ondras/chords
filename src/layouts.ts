@@ -23,16 +23,17 @@ interface Context {
 interface Options {
 	startFret: number;
 	maxFret: number;
+	fingerRange: number;
 	strategy: "exact" | "nonempty" | "all"
 }
 
 const OPTIONS = {
 	startFret: 1,
 	maxFret: 12,
-	strategy: "exact"
+	strategy: "exact",
+	fingerRange: 3
 }
 
-const FINGER_RANGE = 3;
 const AVAILABLE_FINGERS = 4;
 
 function sum(arr: number[]) { return arr.reduce((a, b) => a+b, 0); }
@@ -179,13 +180,12 @@ function layoutFromFingers(fingers: Finger[]) {
 	return {fingers, barre};
 }
 
-function createAtFret(instrument: instruments.Instrument, chord: Chord, fret: number, maxFret: number) {
+function createAtFret(instrument: instruments.Instrument, chord: Chord, fret: number, endFret: number) {
 	let ctx: Context = {
 		tonicFound: false,
 		mustStartWithTonic: instrument.mustStartWithTonic
 	};
 
-	let endFret = Math.min(maxFret, fret + FINGER_RANGE - 1);
 	let fingers = instrument.strings.map(string => fingersOnString(string, chord, fret, endFret, ctx));
 
 	function hAT(layout: Layout) { return hasAllTones(layout, instrument, chord); }
@@ -205,7 +205,8 @@ export function create(instrumentName: string, chord: Chord, options:Partial<Opt
 
 	let fret = opts.startFret;
 	while (fret <= opts.maxFret) {
-		let layouts = createAtFret(instrument, chord, fret, opts.maxFret);
+		let endFret = Math.min(opts.maxFret, fret + opts.fingerRange - 1);
+		let layouts = createAtFret(instrument, chord, fret, endFret);
 		if (opts.strategy == "exact") {
 			results = layouts;
 			break;
