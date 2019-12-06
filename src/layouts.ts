@@ -15,11 +15,6 @@ export interface Layout {
 	barre: Barre | null;
 }
 
-interface Context {
-	tonicFound: boolean;
-	mustStartWithTonic: boolean;
-}
-
 interface Options {
 	startFret: number;
 	maxFret: number;
@@ -39,8 +34,13 @@ const AVAILABLE_FINGERS = 4;
 function sum(arr: number[]) { return arr.reduce((a, b) => a+b, 0); }
 function min(arr: number[]) { return Math.min(...arr); }
 function max(arr: number[]) { return Math.max(...arr); }
+function isTone(finger: number) { return finger > -1; }
 
-function COMPARE(a: Layout, b: Layout) {
+function CMP_TONES(a: Layout, b: Layout) {
+	return b.fingers.filter(isTone).length - a.fingers.filter(isTone).length;
+}
+
+function CMP_RELEVANCE(a: Layout, b: Layout) {
 	let rf1 = a.fingers.filter(f => f>0);
 	let rf2 = b.fingers.filter(f => f>0);
 
@@ -109,22 +109,15 @@ function computeBarre(fingers: Finger[]): Barre | null {
 	return { fret, from };
 }
 
-function fingersOnString(string: tones.Tone, chord: Chord, startFret: number, endFret: number, ctx:Context) {
-	let result = new Set<Finger>();
+function fingersOnString(string: tones.Tone, chord: Chord, startFret: number, endFret: number) {
+	let result = new Set<Finger>([-1]);
 	let frets = [0];
 	for (let i=startFret; i<=endFret; i++) { frets.push(i); }
 
 	frets.forEach(fret => {
 		let t = tones.transpose(string, fret);
 		let index = chord.tones.indexOf(t);
-		if (index == -1) { return; }
-
-		if (ctx.tonicFound || !ctx.mustStartWithTonic) {
-			result.add(fret);
-		} else if (index == 0) {
-			ctx.tonicFound = true;
-			result.add(fret);
-		}
+		if (index > -1) { result.add(fret); }
 	});
 
 	if (result.size == 0) { result.add(-1); }
@@ -132,47 +125,20 @@ function fingersOnString(string: tones.Tone, chord: Chord, startFret: number, en
 	return result;
 }
 
-function hasAllTones(layout: Layout, instrument: instruments.Instrument, chord: Chord) {
+function isValid(layout: Layout, instrument: instruments.Instrument, chord: Chord) {
 	let remaining = new Set<tones.Tone>(chord.tones);
+	let startsWithTonic: null | boolean = null;
 
 	layout.fingers.forEach((f, i) => {
 		if (f == -1) { return; }
 		let tone = tones.transpose(instrument.strings[i], f);
 		remaining.delete(tone);
+		if (startsWithTonic === null) { startsWithTonic = (tone == chord.tones[0]); }
 	});
-	return (remaining.size == 0);
-}
+	if (remaining.size > 0) { return false; } // has all tones?
+	if (instrument.mustStartWithTonic && !startsWithTonic) { return false; }
 
-function expandRedundantTones(layout: Layout, instrument: instruments.Instrument): Layout | Layout[] {
-	if (fingerCount(layout) <= AVAILABLE_FINGERS) { return layout; }
-
-	let toneToStrings = new Map<tones.Tone, number[]>();
-
-	layout.fingers.forEach((f, i) => {
-		if (f < 1) { return; }
-		let tone = tones.transpose(instrument.strings[i], f);
-		let strings = toneToStrings.get(tone) || [];
-		strings.push(i);
-		toneToStrings.set(tone, strings);
-	});
-
-	let results: Layout[] = [];
-
-	toneToStrings.forEach(strings => {
-		if (strings.length < 2) { return; }
-		strings.forEach(string => {
-			let altFingers = layout.fingers.slice();
-			altFingers[string] = -1;
-
-			let alternative: Layout = {
-				fingers: altFingers,
-				barre: layout.barre
-			}
-			results.push(alternative);
-		});
-	});
-
-	return results;
+	return true;
 }
 
 function layoutFromFingers(fingers: Finger[]) {
@@ -181,20 +147,13 @@ function layoutFromFingers(fingers: Finger[]) {
 }
 
 function createAtFret(instrument: instruments.Instrument, chord: Chord, fret: number, endFret: number) {
-	let ctx: Context = {
-		tonicFound: false,
-		mustStartWithTonic: instrument.mustStartWithTonic
-	};
+	let fingers = instrument.strings.map(string => fingersOnString(string, chord, fret, endFret));
 
-	let fingers = instrument.strings.map(string => fingersOnString(string, chord, fret, endFret, ctx));
-
-	function hAT(layout: Layout) { return hasAllTones(layout, instrument, chord); }
-	function eRT(layout: Layout) { return expandRedundantTones(layout, instrument); }
+	function iV(layout: Layout) { return isValid(layout, instrument, chord); }
 
 	return cartesianProduct(fingers)
 		.map(layoutFromFingers)
-		.filter(hAT)
-		.flatMap(eRT)
+		.filter(iV)
 		.filter(canBePlayed)
 }
 
@@ -219,12 +178,21 @@ export function create(instrumentName: string, chord: Chord, options:Partial<Opt
 		fret++;
 	}
 
-	let cache = new Set();
+	let cache = new Map<string, Finger[]>();
 	function deduplicate(layout: Layout) {
-		let str = layout.fingers.join(",");
-		if (cache.has(str)) { return false; }
-		cache.add(str);
+		const fingers = layout.fingers;
+		let key = fingers.join(",");
+		if (cache.has(key)) { return false; }
+
+		for (let [, other] of cache) { // subset?
+			if (fingers.every((f, i) => f == -1 || f == other[i])) { return false; }
+		}
+
+		cache.set(key, fingers);
 		return true;
 	}
-	return results.filter(deduplicate).sort(COMPARE);
+	return results
+		.sort(CMP_TONES)
+		.filter(deduplicate)
+		.sort(CMP_RELEVANCE);
 }

@@ -3,7 +3,7 @@
 
 import { chords, layouts, render } from "./lib/api.js";
 
-/* */
+/* *
 ["C+7"].forEach(str => {
 	let chord = chords.parse(str);
 	let name = chords.toString(chord);
@@ -12,7 +12,8 @@ import { chords, layouts, render } from "./lib/api.js";
 		document.body.appendChild(render.svg(l, name));
 	});
 });
-/*
+*/
+/* */
 document.body.appendChild(document.createElement("br"));
 ["C", "D", "D9", "Dmi", "E", "Emi", "F", "F7", "Fmi", "G", "A", "Ami", "B", "H", "H7", "Hmi7/5-", "Fmaj7"].forEach(str => {
 	let chord = chords.parse(str, "german");
